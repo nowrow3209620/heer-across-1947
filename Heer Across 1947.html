@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heer Across 1947</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Mukta+Mahee:wght@400;600;800&family=Noto+Nastaliq+Urdu:wght@500&family=Oswald:wght@500;600&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a vertical railway line stitched onto a phulkari bagh; each station is a khaddar panel under a yellow trilingual station board; the train is dragged (or scrolled) down the line. Single theme by choice. */
+:root{
+  --madder:#7d1616;      /* phulkari base cloth */
+  --silk:#e3a52c;        /* golden pat silk */
+  --silk-pale:#f3d27e;
+  --cloth:#f1e8d3;       /* unbleached khaddar panel */
+  --ink:#1e1410;
+  --board:#f2c200;       /* railway station board */
+  --nazar:#1d3a6e;       /* the one odd motif */
+  --magenta:#b3145a;
+  --f-body:"Courier Prime","Courier New",monospace;
+  --f-board:"Oswald","Arial Narrow",sans-serif;
+  --f-gur:"Mukta Mahee","Raavi",sans-serif;
+  --f-shm:"Noto Nastaliq Urdu","Jameel Noori Nastaleeq",serif;
+  --f-hand:"Caveat","Comic Sans MS",cursive;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background-color:var(--madder);
+  background-image:var(--bagh,none);
+  background-size:96px 96px;
+  color:var(--ink);
+  font-family:var(--f-body);
+  font-size:17px;
+  line-height:1.6;
+}
+a{color:var(--magenta);text-underline-offset:3px}
+a:focus-visible,.train:focus-visible,.board:focus-visible{outline:3px solid var(--board);outline-offset:3px}
+
+/* ---------- header ticket ---------- */
+header{display:flex;justify-content:center;padding:48px 16px 24px}
+.ticket{
+  background:var(--cloth);
+  max-width:680px;width:100%;
+  padding:28px 32px 24px;
+  position:relative;
+  box-shadow:0 0 0 6px var(--cloth),0 0 0 8px var(--silk);
+}
+.ticket .meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  font-size:13px;letter-spacing:.08em;text-transform:uppercase;border-bottom:2px dashed var(--ink);padding-bottom:10px;margin-bottom:16px}
+.ticket h1{font-family:var(--f-board);font-weight:600;font-size:clamp(34px,6vw,56px);line-height:1.05;margin:0;letter-spacing:.01em;text-wrap:balance}
+.ticket .scripts{display:flex;gap:20px;flex-wrap:wrap;align-items:baseline;margin:6px 0 14px}
+.ticket .gur{font-family:var(--f-gur);font-weight:800;font-size:28px}
+.ticket .shm{font-family:var(--f-shm);font-size:24px;line-height:2.2}
+.ticket p{margin:0 0 10px;max-width:60ch}
+.stamp{position:absolute;right:22px;top:58px;transform:rotate(-9deg);
+  border:3px solid var(--magenta);color:var(--magenta);font-family:var(--f-board);
+  padding:2px 10px;font-size:15px;letter-spacing:.12em;opacity:.85}
+.howto{font-size:14px;border-top:2px dashed var(--ink);padding-top:10px;margin-top:6px}
+
+/* ---------- line ---------- */
+.line{position:relative;max-width:1100px;margin:0 auto;padding:40px 16px 80px}
+.track{
+  position:absolute;top:0;bottom:0;left:50%;width:54px;transform:translateX(-50%);
+  background:
+    linear-gradient(90deg,transparent 9px,#2b2622 9px,#2b2622 14px,transparent 14px,transparent 40px,#2b2622 40px,#2b2622 45px,transparent 45px),
+    repeating-linear-gradient(180deg,#5b3b22 0 9px,transparent 9px 26px);
+}
+.train{
+  position:absolute;left:50%;top:0;width:44px;height:196px;margin-left:-22px;
+  cursor:grab;touch-action:none;z-index:5;filter:drop-shadow(0 6px 6px rgba(0,0,0,.45));
+}
+.train.dragging{cursor:grabbing}
+.train svg{display:block;width:100%;height:100%}
+
+.stations{display:flex;flex-direction:column;gap:120px;position:relative}
+.station{display:grid;grid-template-columns:1fr 120px 1fr;align-items:start}
+.station .panel{grid-column:1}
+.station.right .panel{grid-column:3}
+.station .pin{grid-column:2;grid-row:1;justify-self:center;margin-top:34px;width:22px;height:22px;border-radius:50%;
+  background:var(--board);border:4px solid var(--ink);position:relative;z-index:2}
+
+.board{
+  display:inline-block;background:var(--board);color:#111;border:3px solid #111;
+  padding:6px 18px 4px;text-align:center;position:relative;cursor:pointer;margin-bottom:-2px;
+}
+.board::before,.board::after{content:"";position:absolute;bottom:-18px;width:5px;height:16px;background:#111}
+.board::before{left:18%}.board::after{right:18%}
+.board .b-gur{font-family:var(--f-gur);font-weight:800;font-size:22px;line-height:1.2;display:block}
+.board .b-shm{font-family:var(--f-shm);font-size:17px;line-height:2;display:block}
+.board .b-en{font-family:var(--f-board);font-weight:600;font-size:22px;letter-spacing:.12em;display:block;line-height:1.1}
+.panel-body{
+  background:var(--cloth);margin-top:16px;padding:22px 24px;position:relative;
+  outline:2px dashed var(--silk);outline-offset:-9px;
+  transition:box-shadow .3s;
+}
+.station.arrived .panel-body{box-shadow:0 0 0 4px var(--board)}
+.station.arrived .pin{background:var(--magenta)}
+.year{font-family:var(--f-board);font-size:15px;letter-spacing:.14em;color:var(--magenta);margin:0}
+.panel-body h2{font-family:var(--f-board);font-weight:600;font-size:30px;line-height:1.1;margin:2px 0 12px;text-wrap:balance}
+.panel-body p{margin:0 0 12px;max-width:62ch}
+.excerpt{background:#e6dbc1;border-left:5px solid var(--silk);padding:12px 16px;margin:14px 0}
+.excerpt .gur{font-family:var(--f-gur);font-size:20px;line-height:1.7;margin:0}
+.excerpt .tr{font-style:italic;margin:6px 0 0}
+.excerpt .placeholder{font-size:14px;margin:8px 0 0;color:#6b5a48}
+.links{display:flex;gap:18px;flex-wrap:wrap;font-size:15px;border-top:1px solid #cdbf9f;padding-top:10px;margin-top:6px}
+.note{
+  font-family:var(--f-hand);color:var(--magenta);font-size:25px;line-height:1.15;text-align:center;
+  background:var(--cloth);margin-top:20px;padding:8px 16px;border:2px solid var(--silk);
+  box-shadow:inset 0 0 0 3px var(--cloth),inset 0 0 0 4px var(--silk)
+}
+.note + .panel-body{margin-top:10px}
+.take{margin:16px 0 12px;padding:14px 16px 4px;background:#faf4e6;border-left:5px solid var(--magenta)}
+.take h3{font-family:var(--f-board);font-weight:600;font-size:15px;letter-spacing:.14em;color:var(--magenta);margin:0 0 8px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.take h3 .tags{font-family:var(--f-body);font-weight:400;font-size:12px;letter-spacing:.04em;color:#7a6650;text-transform:lowercase}
+.take p{margin:0 0 10px}
+.carried{margin:0 0 10px;padding-left:20px}
+.carried li{margin-bottom:6px}
+.carry{display:flex;gap:12px;align-items:flex-start;border:2px dashed var(--ink);padding:9px 12px;margin:12px 0 10px;font-weight:700;max-width:none!important}
+.carry .lbl{font-family:var(--f-board);font-weight:500;font-size:12px;letter-spacing:.12em;background:var(--ink);color:var(--board);padding:3px 7px;white-space:nowrap;margin-top:2px}
+.carry.final{border-color:var(--magenta);background:#fbeef2}
+.carry.final .lbl{background:var(--magenta);color:#fff}
+.reading ul{margin:6px 0 0;padding-left:20px;font-size:15px}
+.reading li{margin-bottom:4px}
+.links a{overflow-wrap:anywhere}
+
+/* nazar buti: the one odd motif */
+.nazar{position:absolute;width:46px;height:46px;z-index:1;cursor:help}
+.nazar span{position:absolute;left:54px;top:-4px;width:210px;background:var(--madder);padding:2px 6px;font-family:var(--f-hand);font-size:20px;line-height:1.1;color:var(--silk-pale)}
+
+/* 1947 crossing */
+.border-1947{position:relative;height:0;margin:20px 0}
+.border-1947::before{content:"";position:absolute;left:-16px;right:-16px;top:0;border-top:4px dashed var(--silk-pale)}
+.border-1947 .lbl{position:absolute;left:calc(50% - 44px);top:-22px;transform:translateX(-100%);background:var(--madder);
+  color:var(--silk-pale);padding:4px 16px;font-family:var(--f-board);letter-spacing:.14em;font-size:20px;white-space:nowrap;z-index:3}
+.border-1947 .lbl .g{font-family:var(--f-gur)}
+.border-1947 .lbl .s{font-family:var(--f-shm);font-size:16px}
+
+.indicator{position:fixed;left:16px;bottom:16px;background:#111;color:var(--board);font-family:var(--f-board);
+  letter-spacing:.1em;padding:8px 14px;font-size:15px;z-index:10;border:2px solid var(--board)}
+footer{text-align:center;color:var(--silk-pale);font-size:14px;padding:0 16px 60px}
+
+@media (max-width:760px){
+  .track{left:30px}
+  .train{left:30px}
+  .station,.station.right{grid-template-columns:60px 1fr}
+  .station .panel,.station.right .panel{grid-column:2}
+  .station .pin{grid-column:1}
+  .note{font-size:22px}
+  .nazar{display:none}
+  .border-1947 .lbl{left:60px;transform:none;font-size:16px}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="ticket">
+    <div class="meta"><span>General class · single journey</span><span>Malka Hans → Today</span></div>
+    <h1>Heer Across 1947</h1>
+    <div class="scripts">
+      <span class="gur">ਸੰਤਾਲੀ ਦੇ ਪਾਰ ਹੀਰ</span>
+      <span class="shm" dir="rtl">سنتالی دے پار ہیر</span>
+    </div>
+    <p>A train journey through one refusal. Heer says no to the Qazi in 1766. In 1947 a poet on a train calls her back. The line runs on into the songs we play today.</p>
+    <p class="howto">Drag the train down the line, scroll, or tap a station board to travel there.</p>
+    <div class="stamp">ਸਫ਼ਰ · JOURNEY</div>
+  </div>
+</header>
+
+<main class="line" id="line">
+  <div class="track" aria-hidden="true"></div>
+
+  <div class="train" id="train" tabindex="0" role="slider" aria-label="Train position. Use arrow keys to move between stations." aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+    <svg viewBox="0 0 44 196" aria-hidden="true">
+      <!-- coaches (rear, top) -->
+      <rect x="4" y="2" width="36" height="58" fill="#6e1f1f" stroke="#111" stroke-width="2"/>
+      <rect x="9" y="8" width="26" height="46" fill="none" stroke="#a5503f" stroke-width="2"/>
+      <line x1="22" y1="8" x2="22" y2="54" stroke="#a5503f" stroke-width="2"/>
+      <rect x="18" y="60" width="8" height="8" fill="#111"/>
+      <rect x="4" y="68" width="36" height="58" fill="#6e1f1f" stroke="#111" stroke-width="2"/>
+      <rect x="9" y="74" width="26" height="46" fill="none" stroke="#a5503f" stroke-width="2"/>
+      <line x1="22" y1="74" x2="22" y2="120" stroke="#a5503f" stroke-width="2"/>
+      <rect x="18" y="126" width="8" height="8" fill="#111"/>
+      <!-- engine (front, bottom) -->
+      <rect x="5" y="134" width="34" height="18" fill="#1b1b1b" stroke="#111" stroke-width="2"/>
+      <rect x="9" y="137" width="26" height="12" fill="#3a3a3a"/>
+      <path d="M8 152 H36 V180 Q22 190 8 180 Z" fill="#222" stroke="#111" stroke-width="2"/>
+      <circle cx="22" cy="164" r="6" fill="#444" stroke="#e3a52c" stroke-width="2"/>
+      <rect x="4" y="186" width="36" height="6" fill="#b3145a" stroke="#111" stroke-width="1.5"/>
+    </svg>
+  </div>
+
+  <div class="stations" id="stations">
+
+    <section class="station" data-name="Malka Hans">
+      <div class="pin" aria-hidden="true"></div>
+      <div class="panel">
+        <div class="board" tabindex="0" role="button" aria-label="Travel to Malka Hans">
+          <span class="b-gur">ਮਲਕਾ ਹਾਂਸ</span>
+          <span class="b-shm" dir="rtl">ملکہ ہانس</span>
+          <span class="b-en">MALKA HANS</span>
+        </div>
+        <div class="note">the story was already old</div>
+        <div class="panel-body">
+          <p class="year">STATION 1 · 1766</p>
+          <h2>The story is written</h2>
+          <p>Waris Shah finishes his Heer in a small room beside the mosque at Malka Hans, near Pakpattan. He didn't invent it. Damodar had told the story more than a century earlier.</p>
+          <div class="excerpt">
+            <p class="gur">ਯਾਰਾਂ ਅਸਾਂ ਨੂੰ ਆਣ ਸਵਾਲ ਕੀਤਾ, ਇਸ਼ਕ ਹੀਰ ਦਾ ਨਵਾਂ ਬਣਾਈਏ ਜੀ<br>ਰਾਂਝੇ ਹੀਰ ਦੇ ਇਸ਼ਕ ਦੀ ਗੱਲ ਸੁੱਤੀ, ਨਵੇਂ ਸਿਰੇ ਤੋਂ ਫੇਰ ਜਗਾਈਏ ਜੀ</p>
+            <p class="tr">Friends came and asked me: let us make Heer's love new.<br>The tale of Ranjha and Heer has fallen asleep; let us wake it again from the start.</p>
+            <p class="placeholder">Waris Shah, Heer. Editions differ slightly in wording.</p>
+          </div>
+          <p>The poem opens by admitting it's a retelling. Anne Murphy reads the Hir the same way: a Punjabi classic built from borrowing across Persian, Sufi and wider South Asian traditions.</p>
+          <div class="take"><h3>WHAT I NOTICE<span class="tags">refusal · world-making · afterlife</span></h3><p>Waris Shah refuses too, in his own way. Damodar's lovers get a happier ending. He gives them a tragic one, where love loses to the family, the clergy and the village.</p><p>So the afterlife starts right here. Whoever wakes the story up gets to decide what it says.</p></div>
+          <p class="carry"><span class="lbl">CARRY FORWARD</span><span>If every retelling changes Heer, who gets to decide what she means?</span></p>
+          <div class="links">
+            <a href="https://www.punjabi-kavita.com/Waris-Shah.php" target="_blank" rel="noopener">Read: the full Heer in Gurmukhi</a>
+            <a href="https://drive.google.com/file/d/1qm1OI76rIlppxU-XhLONyMGB3AISA2FP/view?usp=drive_link" target="_blank" rel="noopener">Read: Murphy, Locating a Punjabi Classic</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="station right" data-name="Jhang" id="jhang">
+      <div class="pin" aria-hidden="true"></div>
+      <div class="panel">
+        <div class="board" tabindex="0" role="button" aria-label="Travel to Jhang">
+          <span class="b-gur">ਝੰਗ</span>
+          <span class="b-shm" dir="rtl">جھنگ</span>
+          <span class="b-en">JHANG</span>
+        </div>
+        <div class="note">refusal no. 1: she won't be given away</div>
+        <div class="panel-body">
+          <p class="year">STATION 2 · THE QAZI</p>
+          <h2>Heer says no</h2>
+          <p>Heer's family want her married to Saida Khera of Rangpur. She says no, so they send for the Qazi. He argues religious law. She argues back in the same language: only God lasts, and her bond with Ranjha is already known to earth and heaven. In folk memory she even beats him.</p>
+          <div class="excerpt">
+            <p class="gur">ਤੂੰ ਕਿਉਂ ਜ਼ੋਰੀ ਕਰਨਾ ਏਂ ਕਾਜ਼ੀ, ਡਰੇਂ ਖ਼ੁਦਾ ਤੂੰ ਨਾਹੀਂ</p>
+            <p class="tr">Why do you force me, Qazi? Have you no fear of God?</p>
+            <p class="placeholder">Heer to the Qazi in Damodar's Heer (early 1600s), the oldest Punjabi telling. Her "no" was there from the very first version.</p>
+          </div>
+          <p>Manzur Ejaz sees her up against everyone at once: her parents, her uncle Kaido, the Qazi, the Kheras, and finally the courts.</p>
+          <div class="take"><h3>MY TAKE<span class="tags">refusal · world-making · afterlife</span></h3><p>My favourite scene in the qissa. She doesn't run from his religion. She turns it on him, and he loses the high ground.</p><p>For a few stanzas she talks as if a woman's own promise counts. That world doesn't exist in Jhang. She argues anyway.</p><p>People call her a tragic victim. I don't agree. She loses in the village and wins in the poem, which is why nobody remembers the wedding.</p></div>
+          <p class="carry"><span class="lbl">CARRY FORWARD</span><span>Is a refusal still a refusal if it loses?</span></p>
+          <div class="links">
+            <a href="https://www.punjabi-kavita.com/HeerWarisShah3.php#Heer203" target="_blank" rel="noopener">Read: Heer and the Qazi in Waris Shah (Gurmukhi, stanzas 203–206)</a>
+            <a href="https://www.youtube.com/watch?v=gKq34Utd48o&amp;list=PLETy81Q7TG58" target="_blank" rel="noopener">Listen: Manzur Ejaz on the Heer</a>
+            <a href="https://drive.google.com/file/d/14hChBcBmaDEKaGPR0CAZOmlM-i9zj9oa/view?usp=drive_link" target="_blank" rel="noopener">Read: Ejaz, Waris Shah: The Ideologue</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="station" data-name="Rangpur">
+      <div class="pin" aria-hidden="true"></div>
+      <div class="panel">
+        <div class="board" tabindex="0" role="button" aria-label="Travel to Rangpur">
+          <span class="b-gur">ਰੰਗਪੁਰ</span>
+          <span class="b-shm" dir="rtl">رنگپور</span>
+          <span class="b-en">RANGPUR</span>
+        </div>
+        <div class="note">refusal no. 2: saying no with her body</div>
+        <div class="panel-body">
+          <p class="year">STATION 3 · AFTER THE WEDDING</p>
+          <h2>Refusing, even after</h2>
+          <p>The wedding happens anyway. In the Kheras' house Heer refuses with whatever she has left: no jewellery, no bright clothes, no food, no sleep. The marriage is never made real.</p>
+          <p>Ranjha has his ears split at Tilla Jogian and turns up in Rangpur as a jogi. Najm Hosain Syed traces this figure, the faqir who walks out of the social order, all through Punjabi poetry.</p>
+          <div class="take"><h3>WHAT I NOTICE<span class="tags">refusal · world-making · afterlife</span></h3><p>Two refusals, two shapes. Ranjha walks out. Heer can't.</p><p>The jogi's road was open to men, so he gets to build another life while she refuses from inside a house she was locked into.</p></div>
+          <p class="carry"><span class="lbl">CARRY FORWARD</span><span>Who gets to leave, and who has to refuse from inside the house?</span></p>
+          <div class="links">
+            <a href="https://drive.google.com/file/d/19ZoaWBljnmZ8_tHbuU7pAu14n4YhbNCx/view?usp=drive_link" target="_blank" rel="noopener">Read: Syed, Recurrent Patterns in Punjabi Poetry</a>
+            <a href="https://www.youtube.com/watch?v=40Dh8r03mcQ&amp;list=PLdKcaQCi-0yg" target="_blank" rel="noopener">Listen: Nain Sukh on the jogi and faqir traditions</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="border-1947" aria-label="The 1947 border">
+      <div class="lbl">1947 · <span class="g">ਸੰਤਾਲੀ</span> · <span class="s" dir="rtl">سنتالی</span></div>
+    </div>
+
+    <section class="station right" data-name="The border">
+      <div class="pin" aria-hidden="true"></div>
+      <div class="panel">
+        <div class="board" tabindex="0" role="button" aria-label="Travel to the 1947 station">
+          <span class="b-gur">ਸਰਹੱਦ</span>
+          <span class="b-shm" dir="rtl">سرحد</span>
+          <span class="b-en">THE BORDER</span>
+        </div>
+        <div class="note">one Heer becomes a million</div>
+        <div class="panel-body">
+          <p class="year">STATION 4 · 1947</p>
+          <h2><span style="font-family:var(--f-gur)">ਅੱਜ ਆਖਾਂ ਵਾਰਸ ਸ਼ਾਹ ਨੂੰ</span><br><span style="font-size:20px;font-weight:500">Today I call upon Waris Shah</span></h2>
+          <p>Amrita Pritam, 28 and pregnant, has fled Lahore. On a night train in 1947 she writes to Waris Shah: rise from your grave and turn a new page in the book of love. Once one daughter of Punjab wept and you wrote her story. Now a million are weeping.</p>
+          <p>This is where the line crosses the border. Sara Kazmi shows Pritam using Heer against the patriarchies of nation and community together.</p>
+          <div class="take"><h3>MY TAKE<span class="tags">refusal · world-making · afterlife</span></h3><p>This station changed the story for me. I'd always filed Heer under romance. Pritam makes her a language for grief.</p><p>What stays with me is who she wrote to. Some readers attacked her for choosing Waris Shah over Guru Nanak. To me that choice is the refusal: a Sikh-born woman fleeing Lahore calls on a Muslim Sufi poet buried across the new border.</p><p>Still, something gets lost. Heer's own "no" dissolves into a million daughters. Generous and flattening, both at once.</p></div>
+          <p class="carry"><span class="lbl">CARRY FORWARD</span><span>When Heer becomes a symbol for everyone, does she stop being herself?</span></p>
+          <div class="links">
+            <a href="https://www.drishtikone.com/aj-akhan-waris-shah-noon-amrita-pritam/" target="_blank" rel="noopener">Listen: Amrita Pritam reads the poem in her own voice</a>
+            <a href="https://scroll.in/article/847004/when-amrita-pritam-called-out-to-waris-shah-in-a-heartrending-ode-while-fleeing-the-partition-riots" target="_blank" rel="noopener">Read: the full poem in translation (Scroll)</a>
+            <a href="https://www.outlookindia.com/books/1947-229059" target="_blank" rel="noopener">Read: Pritam on the train night, from Rasidi Ticket</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="station" data-name="Lahore">
+      <div class="pin" aria-hidden="true"></div>
+      <div class="panel">
+        <div class="board" tabindex="0" role="button" aria-label="Travel to Lahore">
+          <span class="b-gur">ਲਾਹੌਰ</span>
+          <span class="b-shm" dir="rtl">لاہور</span>
+          <span class="b-en">LAHORE</span>
+        </div>
+        <div class="note">across the border, Heer again</div>
+        <div class="panel-body">
+          <p class="year">STATION 5 · THIRTY YEARS ON</p>
+          <h2>Nasreen Anjum Bhatti</h2>
+          <p>Nasreen Anjum Bhatti (1943–2016) was a poet, painter and Radio Pakistan broadcaster who wrote in Punjabi against military rule. She reaches for Heer too, this time against the state and the men who claim to speak for Punjab.</p>
+          <p>Kazmi reads her beside Pritam. Her last collection, <span style="font-family:var(--f-gur)">ਸ਼ਾਮਲਾਤ</span> (common land), came out after her death.</p>
+          <div class="take"><h3>WHAT I NOTICE<span class="tags">refusal · world-making · afterlife</span></h3><p>Pritam asked Waris Shah to wake up. Bhatti seems to talk to Heer directly. Thirty years on, the other side of the border, same story, different Qazi.</p><p>Then there's that title. After a border that split Punjab like property, a book called <span style="font-family:var(--f-gur)">ਸ਼ਾਮਲਾਤ</span>, common land, reads like a small act of world-making.</p></div>
+          <p class="carry"><span class="lbl">CARRY FORWARD</span><span>Can a story belong to two countries that went to war over a line?</span></p>
+          <div class="links">
+            <a href="https://drive.google.com/file/d/1W1P0fuXrRwjteYlZ2d29YLhwPpI7-b6g/view?usp=drive_link" target="_blank" rel="noopener">Read: Kazmi, Radical Re-tellings of Hir</a>
+            <a href="https://apnaorg.com/wp/?p=83309" target="_blank" rel="noopener">Read: Mahmood Awan on her last book, "Note of refusal"</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="station right" data-name="Today">
+      <div class="pin" aria-hidden="true"></div>
+      <div class="panel">
+        <div class="board" tabindex="0" role="button" aria-label="Travel to Today">
+          <span class="b-gur">ਅੱਜ</span>
+          <span class="b-shm" dir="rtl">اج</span>
+          <span class="b-en">TODAY</span>
+        </div>
+        <div class="note">still singing, but singing what?</div>
+        <div class="panel-body">
+          <p class="year">STATION 6 · SONGS AND REELS</p>
+          <h2>Heer on repeat</h2>
+          <p>Coke Studio Pakistan's season 12 released "Heeray" in its fifth episode in 2019, sung by Rahat Fateh Ali Khan and Aima Baig. Mekaal Hasan Band turned Pritam's poem into a song called "Waris Shah". Listen to both, then scroll a Heer hashtag.</p>
+          <div class="take"><h3>MY TAKE<span class="tags">refusal · world-making · afterlife</span></h3><p>Honestly? I like Heeray. I've played it more than once.</p><p>But after reading the qissa I could hear what's missing: the people she was fighting. Coke Studio hoped the song's message of love would reach "the young Heers and Ranjhas of today". Love. Not defiance.</p><p>The hashtag is mostly couples and slow-motion dupattas. Fine. Afterlives change, and Mekaal Hasan Band at least keeps the grief audible. My view, though, is simple: a Heer with no Qazi has stopped refusing.</p></div>
+          <p class="carry"><span class="lbl">CARRY FORWARD</span><span>When we sing Heer today, who is our Qazi?</span></p>
+          <div class="links">
+            <a href="https://www.youtube.com/watch?v=Ky34KrtRgNc" target="_blank" rel="noopener">Watch: Heeray, Coke Studio 12</a>
+            <a href="https://www.youtube.com/watch?v=cBtHFFBAZbE" target="_blank" rel="noopener">Watch: Mekaal Hasan Band, Waris Shah</a>
+            <a href="https://mekaalhasanbandmusic.bandcamp.com/track/waris-shah" target="_blank" rel="noopener">Listen: the same song on Bandcamp, with lyrics</a>
+            <a href="https://www.instagram.com/explore/tags/heerranjha/" target="_blank" rel="noopener">Scroll: #heerranjha on Instagram</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="station" data-name="Zanjeer">
+      <div class="pin" aria-hidden="true"></div>
+      <div class="panel">
+        <div class="board" tabindex="0" role="button" aria-label="Travel to the last station, The Chain">
+          <span class="b-gur">ਜ਼ੰਜੀਰ</span>
+          <span class="b-shm" dir="rtl">زنجیر</span>
+          <span class="b-en">THE CHAIN</span>
+        </div>
+        <div class="note">where I pull the chain</div>
+        <div class="panel-body">
+          <p class="year">LAST STOP</p>
+          <h2>Pulling the chain</h2>
+          <p>Every Indian train has an emergency chain. Pull it and everything stops, because something matters more than the timetable. A small refusal of its own. So this is where I stop and look back down the line.</p>
+          <div class="take"><h3>WHAT I CARRIED HERE</h3>
+            <ul class="carried">
+              <li>If every retelling changes Heer, who gets to decide what she means?</li>
+              <li>Is a refusal still a refusal if it loses?</li>
+              <li>Who gets to leave, and who has to refuse from inside the house?</li>
+              <li>When Heer becomes a symbol for everyone, does she stop being herself?</li>
+              <li>Can a story belong to two countries that went to war over a line?</li>
+              <li>When we sing Heer today, who is our Qazi?</li>
+            </ul>
+          </div>
+          <p>Put side by side, they feel like one question. One woman says no to a marriage. Waris Shah makes it tragic. Pritam turns it into grief for a divided Punjab, and Bhatti points it at a dictatorship. Today it is mostly a love song.</p>
+          <p>Here's where I've landed. Heer is alive only when someone pushes against something through her. As a word for romance she's remembered, but she isn't refusing. The songs aren't wrong. Keeping the refusal alive is the listener's job.</p>
+          <p class="carry final"><span class="lbl">YOUR TURN</span><span>So when you next hear Heer in a song, whose refusal can you still hear in it, and what has been softened away?</span></p>
+          <div class="reading">
+            <p class="year" style="margin-top:14px">FURTHER READING FROM THE COURSE</p>
+            <ul>
+              <li><a href="https://drive.google.com/file/d/1W1P0fuXrRwjteYlZ2d29YLhwPpI7-b6g/view?usp=drive_link" target="_blank" rel="noopener">Sara Kazmi, "Radical Re-tellings of Hir"</a></li>
+              <li><a href="https://drive.google.com/file/d/1qm1OI76rIlppxU-XhLONyMGB3AISA2FP/view?usp=drive_link" target="_blank" rel="noopener">Anne Murphy, "Locating a Punjabi Classic"</a></li>
+              <li><a href="https://drive.google.com/file/d/1JmT1nnnNyYs94-bTmConymxXYv4iWjOI/view?usp=drive_link" target="_blank" rel="noopener">Farina Mir, The Social Space of Language</a></li>
+              <li><a href="https://drive.google.com/file/d/151a63kxEZeHqzchmSqby7kP4e6gaqFuD/view?usp=drive_link" target="_blank" rel="noopener">Malhotra and Mir, eds., Punjab Reconsidered</a></li>
+              <li><a href="https://drive.google.com/file/d/14hChBcBmaDEKaGPR0CAZOmlM-i9zj9oa/view?usp=drive_link" target="_blank" rel="noopener">Manzur Ejaz, Waris Shah: The Ideologue</a></li>
+              <li><a href="https://drive.google.com/file/d/19ZoaWBljnmZ8_tHbuU7pAu14n4YhbNCx/view?usp=drive_link" target="_blank" rel="noopener">Najm Hosain Syed, Recurrent Patterns in Punjabi Poetry</a></li>
+              <li><a href="https://on.soundcloud.com/XIWH0aWgn011yWVrmg" target="_blank" rel="noopener">Najm Hosain Syed, audio essays (read by Sameena Syed)</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer>Made for CLA-0056-1, Exploring Refusal and Its Afterlives in Punjabi Language, Literature and Culture.<br>Translations of the Waris Shah and Damodar lines are adapted for this page. Modern poems are linked, not reproduced.</footer>
+<div class="indicator" id="indicator" aria-live="polite">NEXT STATION: MALKA HANS</div>
+
+<script>
+(function(){
+  /* ---------- phulkari bagh tile (drawn, not copied) ---------- */
+  function baghTile(){
+    var s=96, c=document.createElement('canvas'); c.width=c.height=s*2; var x=c.getContext('2d'); x.scale(2,2);
+    x.fillStyle='#7d1616'; x.fillRect(0,0,s,s);
+    // darn-stitch diamond: short horizontal stitches filling a rhombus
+    function diamond(cx,cy,r,col){
+      x.strokeStyle=col; x.lineWidth=1.6; x.lineCap='round';
+      for(var dy=-r; dy<=r; dy+=2.4){
+        var half=(r-Math.abs(dy));
+        for(var dx=-half; dx<half; dx+=5){
+          x.beginPath(); x.moveTo(cx+dx,cy+dy); x.lineTo(cx+Math.min(dx+3.6,half),cy+dy); x.stroke();
+        }
+      }
+    }
+    diamond(48,48,18,'#d99a2b');
+    diamond(48,48,9,'#f3d27e');
+    [[0,0],[96,0],[0,96],[96,96]].forEach(function(p){diamond(p[0],p[1],10,'#c4842a');});
+    // small magenta accents
+    x.fillStyle='#b3145a';
+    [[48,13],[48,83],[13,48],[83,48]].forEach(function(p){x.fillRect(p[0]-2,p[1]-2,4,4);});
+    return c.toDataURL();
+  }
+  try{document.body.style.setProperty('--bagh','url('+baghTile()+')');}catch(e){}
+
+  /* ---------- nazar buti beside Jhang ---------- */
+  function placeNazar(){
+    var old=document.getElementById('nazar'); if(old) old.remove();
+    var j=document.getElementById('jhang'); if(!j||innerWidth<760) return;
+    var c=document.createElement('canvas'); c.width=c.height=92; var x=c.getContext('2d'); x.scale(2,2);
+    x.strokeStyle='#1d3a6e'; x.lineWidth=1.6;
+    for(var dy=-20; dy<=20; dy+=2.4){var h=20-Math.abs(dy); for(var dx=-h; dx<h; dx+=5){x.beginPath();x.moveTo(23+dx,23+dy);x.lineTo(23+Math.min(dx+3.6,h),23+dy);x.stroke();}}
+    var d=document.createElement('div'); d.className='nazar'; d.id='nazar';
+    d.title='ਨਜ਼ਰ ਬੂਟੀ, the evil-eye motif: phulkari embroiderers left one motif in an odd colour to ward off the evil eye.';
+    d.style.background='url('+c.toDataURL()+') center/46px no-repeat';
+    var line=document.getElementById('line'), lr=line.getBoundingClientRect(), jr=j.getBoundingClientRect();
+    d.style.left=(lr.width/2-330)+'px'; d.style.top=(jr.top-lr.top+190)+'px';
+    d.innerHTML='<span>the one stitch that doesn\'t match</span>';
+    line.appendChild(d);
+  }
+
+  /* ---------- train ---------- */
+  var line=document.getElementById('line'), train=document.getElementById('train'),
+      ind=document.getElementById('indicator'), stations=[].slice.call(document.querySelectorAll('.station'));
+  var dragging=false, H=196, anchor=0.38;
+  function lineTop(){return line.getBoundingClientRect().top+scrollY;}
+  function maxY(){return line.offsetHeight-H;}
+  function setTrain(y){
+    y=Math.max(0,Math.min(maxY(),y));
+    train.style.top=y+'px';
+    train.setAttribute('aria-valuenow',Math.round(100*y/maxY()));
+    var front=lineTop()+y+H/2, best=null, bestD=1e9, next=null;
+    stations.forEach(function(s){
+      var p=s.querySelector('.pin').getBoundingClientRect(), py=p.top+scrollY+p.height/2, d=Math.abs(front-py);
+      if(d<bestD){bestD=d;best=s;}
+      if(py>front+60 && !next) next=s;
+    });
+    stations.forEach(function(s){s.classList.toggle('arrived',s===best&&bestD<120);});
+    ind.textContent=(best&&bestD<120)?'NOW AT: '+best.dataset.name.toUpperCase():(next?'NEXT STATION: '+next.dataset.name.toUpperCase():'END OF THE LINE');
+  }
+  function fromScroll(){ if(!dragging) setTrain(scrollY+innerHeight*anchor-lineTop()-H/2); }
+  addEventListener('scroll',fromScroll,{passive:true});
+  addEventListener('resize',function(){placeNazar();fromScroll();});
+
+  var offset=0;
+  train.addEventListener('pointerdown',function(e){
+    dragging=true; train.classList.add('dragging'); train.setPointerCapture(e.pointerId);
+    offset=e.pageY-(lineTop()+parseFloat(train.style.top||0)); e.preventDefault();
+  });
+  train.addEventListener('pointermove',function(e){
+    if(!dragging) return;
+    var y=e.pageY-lineTop()-offset; setTrain(y);
+    // keep the train in view while dragging
+    var vy=e.clientY; if(vy>innerHeight-80) scrollBy(0,14); else if(vy<80) scrollBy(0,-14);
+  });
+  function endDrag(){ if(!dragging) return; dragging=false; train.classList.remove('dragging'); }
+  train.addEventListener('pointerup',endDrag); train.addEventListener('pointercancel',endDrag);
+
+  function goTo(s){
+    var p=s.querySelector('.pin').getBoundingClientRect();
+    var target=p.top+scrollY+p.height/2-H - (innerHeight*anchor-H/2);
+    scrollTo({top:target,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+  }
+  document.querySelectorAll('.board').forEach(function(b){
+    var s=b.closest('.station');
+    b.addEventListener('click',function(){goTo(s);});
+    b.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();goTo(s);}});
+  });
+  train.addEventListener('keydown',function(e){
+    var cur=stations.findIndex(function(s){return s.classList.contains('arrived');});
+    if(e.key==='ArrowDown'){e.preventDefault();goTo(stations[Math.min(stations.length-1,cur+1)]);}
+    if(e.key==='ArrowUp'){e.preventDefault();goTo(stations[Math.max(0,cur-1)]);}
+  });
+
+  placeNazar(); fromScroll();
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(function(){placeNazar();fromScroll();});
+})();
+</script>
+</body>
+</html>
